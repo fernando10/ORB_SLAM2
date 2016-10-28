@@ -1,6 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 SET(CMAKE_LEGACY_CYGWIN_WIN32 0)
 
+if(POLICY CMP0042)
+  cmake_policy(SET CMP0042 NEW) # MACOSX_RPATH
+endif()
+
 PROJECT(g2o)
 
 SET(g2o_C_FLAGS)
@@ -21,6 +25,7 @@ if(MSVC90)
   add_definitions(-DEIGEN_DONT_ALIGN_STATICALLY=1)
   message(STATUS "Disabling memory alignment for MSVC8")
 endif(MSVC90)
+
 
 # Set the output directory for the build executables and libraries
 IF(WIN32)
