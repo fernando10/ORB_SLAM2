@@ -1,0 +1,10 @@
+#Binary and build Files
+build
+lib
+bin
+.dylib
+.so
+.dll
+
+#MAC Finder
+.DS_Store
