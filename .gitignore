@@ -5,6 +5,7 @@ bin
 .dylib
 .so
 .dll
+.txt
 
 #MAC Finder
 .DS_Store
