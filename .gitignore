@@ -8,3 +8,6 @@ bin
 
 #MAC Finder
 .DS_Store
+
+#Autosave files
+.autosave
