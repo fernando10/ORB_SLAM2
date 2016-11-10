@@ -20,6 +20,8 @@
 
 #include "Viewer.h"
 #include <pangolin/pangolin.h>
+#include <SceneGraph/SceneGraph.h>
+
 
 #include <mutex>
 
@@ -57,13 +59,10 @@ void Viewer::Run()
     mbStopped = false;
 
     pangolin::CreateWindowAndBind("ORB-SLAM2: Map Viewer",1024,768);
+    SceneGraph::GLSceneGraph::ApplyPreferredGlSettings();
 
-    // 3D Mouse handler requires depth testing to be enabled
-    glEnable(GL_DEPTH_TEST);
-
-    // Issue specific OpenGl we might need
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // Scenegraph to hold GLObjects and relative transformations
+    SceneGraph::GLSceneGraph glGraph;
 
     pangolin::CreatePanel("menu").SetBounds(0.0,1.0,0.0,pangolin::Attach::Pix(175));
     pangolin::Var<bool> menuFollowCamera("menu.Follow Camera",true,true);
@@ -79,15 +78,28 @@ void Viewer::Run()
                 pangolin::ModelViewLookAt(mViewpointX,mViewpointY,mViewpointZ, 0,0,0,0.0,-1.0, 0.0)
                 );
 
+    //.SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
+
     // Add named OpenGL viewport to window and provide 3D Handler
     pangolin::View& d_cam = pangolin::CreateDisplay()
-            .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0, -1024.0f/768.0f)
-            .SetHandler(new pangolin::Handler3D(s_cam));
+            .SetAspect(-1024.0f/768.0f)
+            .SetHandler(new SceneGraph::HandlerSceneGraph(glGraph, s_cam))
+            .SetDrawFunction(SceneGraph::ActivateDrawFunctor(glGraph, s_cam));
+
+    // We define a special type of view which will accept image data
+    // to display and set its bounds on screen.
+    SceneGraph::ImageView viewImage(true,false);
+    viewImage.SetAspect(640.0f/420.0f);
+
+    // Create a new view and attach the sub-views to this one
+    pangolin::Display("multi")
+        .SetBounds(0.0, 1.0, pangolin::Attach::Pix(175), 1.0)
+        .SetLayout(pangolin::LayoutEqual)
+        .AddDisplay(d_cam)
+        .AddDisplay(viewImage);
 
     pangolin::OpenGlMatrix Twc;
     Twc.SetIdentity();
-
-    cv::namedWindow("ORB-SLAM2: Current Frame");
 
     bool bFollow = true;
     bool bLocalizationMode = false;
@@ -124,6 +136,7 @@ void Viewer::Run()
             bLocalizationMode = false;
         }
 
+        // draw the camera tracker
         d_cam.Activate(s_cam);
         glClearColor(1.0f,1.0f,1.0f,1.0f);
         mpMapDrawer->DrawCurrentCamera(Twc);
@@ -132,11 +145,12 @@ void Viewer::Run()
         if(menuShowPoints)
             mpMapDrawer->DrawMapPoints();
 
-        pangolin::FinishFrame();
-
+        // draw the image
         cv::Mat im = mpFrameDrawer->DrawFrame();
-        cv::imshow("ORB-SLAM2: Current Frame",im);
-        cv::waitKey(mT);
+        viewImage.SetImage(im.data, im.cols, im.rows, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
+
+
+        pangolin::FinishFrame();
 
         if(menuReset)
         {
@@ -226,7 +240,7 @@ bool Viewer::Stop()
 void Viewer::Release()
 {
     unique_lock<mutex> lock(mMutexStop);
-    mbStopped = true;
+    mbStopped = false;
 }
 
 }
