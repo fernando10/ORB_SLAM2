@@ -28,9 +28,9 @@
 
 #ifdef __APPLE__
 #include <unistd.h> // for 'usleep'
-#else
-#include<unistd-gcc.h>
 #endif
+//#include<unistd-gcc.h>
+//#endif
 
 #include "Tracking.h"
 #include "FrameDrawer.h"
