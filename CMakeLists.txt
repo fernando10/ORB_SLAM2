@@ -14,6 +14,9 @@ endif()
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 
+option( BUILD_EXAMPLES "Build Examples" ON )
+option( BUILD_APPLICATIONS "Build Applications" ON )
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3 -march=native")
 
@@ -39,6 +42,11 @@ find_package(OpenCV 2.4.3 REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(SceneGraph REQUIRED)
+find_package(HAL REQUIRED)
+find_package(Calibu 0.1 REQUIRED)
+find_package(Sophus REQUIRED)
+find_package(GLog REQUIRED)
+
 
 
 include_directories(
@@ -46,7 +54,11 @@ ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
+${HAL_INCLUDE_DIRS}
+${Calibu_INCLUDE_DIRS}
+${Sophus_INCLUDE_DIR}
 ${SceneGraph_INCLUDE_DIRS}
+${GLog_INCLUDE_DIRS}
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
@@ -86,10 +98,15 @@ ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
 ${Pangolin_LIBRARIES}
 ${SceneGraph_LIBRARIES}
+${HAL_LIBRARIES}
+${GLog_LIBRARIES}
+${Sophus_LIBRARIES}
+${Calibu_LIBRARY}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.${lib_extensions}
 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.${lib_extensions}
 )
 
+if( BUILD_EXAMPLES )
 # Build examples
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/Examples/RGB-D)
@@ -122,4 +139,17 @@ target_link_libraries(mono_kitti ${PROJECT_NAME})
 add_executable(mono_euroc
 Examples/Monocular/mono_euroc.cc)
 target_link_libraries(mono_euroc ${PROJECT_NAME})
+
+endif()
+
+if( BUILD_APPLICATIONS )
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/Applications)
+
+add_executable(compass
+Applications/compass/compass.cc)
+target_link_libraries(compass ${PROJECT_NAME})
+
+endif()
+
 
